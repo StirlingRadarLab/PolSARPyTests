@@ -11,32 +11,50 @@
 
 import sys
 
-flag_routine = "yamaguchi"
+# flag_routine = "yamaguchi"
+flag_routine = "cameron"
 # flag_routine = "lee"
 # flag_routine = "PWF"
 # flag_routine = "Freeman"
+# flag_routine = "TSVM"
+# flag_routine = "VanZyl"
+
+dir_list = [ flag_routine ]
 
 
-if flag_routine == "yamaguchi":
-    sys.path.insert(0, '/home/am221/C/Programs/PolSARproPy/Phase_2/Branches/Yamaguchi')
-    from polsarpro.decompositions import yamaguchi4
+# if flag_routine == "yamaguchi":
+#     # sys.path.insert(0, '/home/am221/C/Programs/PolSARproPy/Phase_2/Branches/Yamaguchi4')
+#     sys.path.insert(0, '/home/am221/C/Programs/PolSARproPy/Phase_2/Branches/PolSARpro-dev-cycle-2025.11')
+#     from polsarpro.decompositions import yamaguchi4
 
-elif flag_routine == "lee":
-    sys.path.insert(0, '/home/am221/C/Programs/PolSARproPy/Phase_2/Branches/LeeRefined')
-    from polsarpro.speckle_filters import refined_lee
+# elif flag_routine == "lee":
+#     sys.path.insert(0, '/home/am221/C/Programs/PolSARproPy/Phase_2/Branches/LeeRefined')
+#     from polsarpro.speckle_filters import refined_lee
 
-elif flag_routine == "PWF":
-    sys.path.insert(0, '/home/am221/C/Programs/PolSARproPy/Phase_2/Branches/PWF')
-    from polsarpro.speckle_filters import PWF
+# elif flag_routine == "PWF":
+#     sys.path.insert(0, '/home/am221/C/Programs/PolSARproPy/Phase_2/Branches/PWF')
+#     from polsarpro.speckle_filters import PWF
 
-elif flag_routine == "Freeman":
-    sys.path.insert(0, '/home/am221/C/Programs/PolSARproPy/Phase_2/Branches/Freeman')
-    from polsarpro.decompositions import freeman
+# elif flag_routine == "Freeman":
+#     sys.path.insert(0, '/home/am221/C/Programs/PolSARproPy/Phase_2/Branches/Freeman')
+#     from polsarpro.decompositions import freeman
     
+# elif flag_routine == "TSVM":
+#     sys.path.insert(0, '/home/am221/C/Programs/PolSARproPy/Phase_2/Branches/TSVM')
+#     from polsarpro.decompositions import tsvm
+
+# elif flag_routine == "VanZyl":
+#     sys.path.insert(0, '/home/am221/C/Programs/PolSARproPy/Phase_2/Branches/VanZyl')
+#     from polsarpro.decompositions import vanzyl
+
+sys.path.insert(0, '/home/am221/C/Programs/PolSARproPy/Phase_2/Branches/PolSARpro-dev-cycle-2025.12')
+import polsarpro.decompositions as dec
+import polsarpro.speckle_filters as sf
+
 
 import os 
 from pathlib import Path
-import xarray as xr
+# import xarray as xr
 from polsarpro.io import open_netcdf_beam
 from polsarpro.util import S_to_T3
 from polsarpro.util import S_to_C3
@@ -68,26 +86,7 @@ S = open_netcdf_beam(input_alos_data)
 #%% Decide what process to run
 
 
-# # # ### TEST
-if flag_routine == "yamaguchi":
-    dir_list = [ 
-                'yamaguchi_4components_decomposition'
-                ]
-elif flag_routine == "lee":
-    dir_list = [ 
-                'LeeRefined'
-                ]    
-
-elif flag_routine == "PWF":
-    dir_list = [ 
-                'PWF'
-                ]    
     
-elif flag_routine == "Freeman":
-    dir_list = [ 
-                'Freeman'
-                ]    
-
 array_pro = dir_list
 
 # change to the name of your liking
@@ -100,10 +99,10 @@ if os.path.isfile(file_out):
 
 if flag_routine == "yamaguchi":
 
-    mode = "s4r" # choose mode among "y4o", "y4r", "s4r"
+    mode = "y4o" # choose mode among "y4o", "y4r", "s4r"
     
     with ProgressBar():
-        yamaguchi4(S, boxcar_size=[7, 7], mode=mode).to_zarr(file_out, mode="w")
+        dec.yamaguchi4(S, boxcar_size=[7, 7], mode=mode).to_zarr(file_out, mode="w")
 
 elif flag_routine == "lee":
 
@@ -112,7 +111,7 @@ elif flag_routine == "lee":
         T3 = S_to_T3(S)
         C3 = S_to_C3(S)
         # apply the filter
-        T3_flt = refined_lee(T3, window_size=7, num_looks=1).to_zarr(file_out, mode="w")
+        T3_flt = sf.refined_lee(T3, window_size=7, num_looks=1).to_zarr(file_out, mode="w")
 
         # use custom function that writes complex matrices and preserves chunks
         # polmat_to_netcdf(T3_flt, output_test_dir / f"T3_refined_lee.nc")    
@@ -121,15 +120,35 @@ elif flag_routine == "lee":
 elif flag_routine == "PWF":
 
     with ProgressBar():
-        PWF(S, train_window_size=[9, 9], test_window_size=[1,1]).to_zarr(file_out, mode="w")
+        sf.PWF(S, train_window_size=[9, 9], test_window_size=[1,1]).to_zarr(file_out, mode="w")
 
 
 elif flag_routine == "Freeman":
 
     with ProgressBar():
-        freeman(S, boxcar_size=[7, 7]).to_zarr(file_out, mode="w")
+        dec.freeman(S, boxcar_size=[7, 7]).to_zarr(file_out, mode="w")
         
+ 
+elif flag_routine == "VanZyl":
+
+    with ProgressBar():
+        dec.vanzyl(S, boxcar_size=[7, 7]).to_zarr(file_out, mode="w")
+              
         
+elif flag_routine == "TSVM":
+    # Variables to compute. A list can be found in the API reference documentation.
+    # For the sake of illustration we chose the default parameter and one of the per-eigenvalue outputs
+    flags = ("alpha_phi_tau_psi", "alpha")
+
+    with ProgressBar():
+        dec.tsvm(S, boxcar_size=[7, 7], flags=flags).to_zarr(file_out, mode="w")
+
+elif flag_routine == "cameron":
+
+    with ProgressBar():
+        dec.cameron(S).to_zarr(file_out, mode="w")
+
+
 # #%% CHECKS IF NEEDED
 # # ## Display outputs
 

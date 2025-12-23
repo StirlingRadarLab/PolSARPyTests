@@ -11,7 +11,7 @@ import os
 
 import xarray as xr
 
-# import SAR_Utilities as sar
+import SAR_Utilities as sar
 
 from pathlib import Path 
 import numpy as np
@@ -28,6 +28,73 @@ import matplotlib
 matplotlib.use('Agg')   # non-GUI backend (no windows open)
 
 plt.close('all')
+
+
+
+#%% FILENAMES
+
+# IN CASE YOU NEED TO HARDCODE
+#################
+# col = 1248
+# row = 18432
+# dtypePSP = '<f4' # this tells that the type is float
+#################
+
+
+# directoris of images
+# psp are envi files
+path_PSP_short = Path("/home/am221/C/Data/PolSARPy/Output_PSP")
+# py are zarray files
+path_Py_short =  Path("/home/am221/C/Data/PolSARPy/Output_Py")
+
+# general directory for saving imaghes
+path_save_short = Path("/home/am221/C/Data/PolSARPy/Save")
+
+
+
+# defining window sizes for visualisation
+root = tk.Tk()
+screen_width = root.winfo_screenwidth()
+screen_height = root.winfo_screenheight()
+dpi = 100  # dots per inch; you can adjust
+    
+# set global font sizes
+plt.rcParams.update({
+    "font.size": 22,
+    "axes.titlesize": 24,
+    "axes.labelsize": 20,
+    "xtick.labelsize": 18,
+    "ytick.labelsize": 18,
+    "legend.fontsize": 18
+})
+
+
+
+
+#%% SELECT THE PROCEDURE TO TEST
+
+# # automatically finding out the algorithms to test
+# dir_list = os.listdir(path_PSP_short)
+
+# # ### TEST
+dir_list = [ 
+            'h_a_alpha_decomposition',
+            'Yamaguchi4_Y4R',
+            'Yamaguchi4_Y4O',
+            'Yamaguchi4_S4R',
+            'Freeman',
+            'LeeRefined',
+            'PWF',
+            'TSVM',
+            'VanZyl',
+            'Cameron'
+            ]
+
+dir_list = [ 
+            'Cameron',
+            ]
+
+array_pro = dir_list
 
 
 
@@ -92,7 +159,7 @@ def Create_Cube(path_Py, path_PSP, name_routine):
         array_file_Py = ['m11', 'm22', 'm33', 'm12', 'm13', 'm23']
 
 ################### YAMAGUCHI #################
-    elif name_routine in ("Yamaguchi4_Y4R", "Yamaguchi4_Y4O", "Yamaguchi4_S4O"):
+    elif name_routine in ("Yamaguchi4_Y4R", "Yamaguchi4_Y4O", "Yamaguchi4_S4R"):
     
         imgPy[:, :, 0] = ds['odd'].values
         imgPy[:, :, 1] = ds['double'].values
@@ -111,7 +178,33 @@ def Create_Cube(path_Py, path_PSP, name_routine):
         imgPy[:, :, 1] = ds['double'].values
         imgPy[:, :, 2] = ds['volume'].values
         array_file_Py = ['odd', 'double', 'volume']
+
+################### VanZyl #################
+    elif name_routine == "VanZyl":
+    
+        imgPy[:, :, 0] = ds['odd'].values
+        imgPy[:, :, 1] = ds['double'].values
+        imgPy[:, :, 2] = ds['volume'].values
+        array_file_Py = ['odd', 'double', 'volume']
         
+################### TSVM #################
+    elif name_routine == "TSVM":
+    
+        imgPy[:, :, 0] = ds['alpha_s'].values
+        imgPy[:, :, 1] = ds['alpha_s1'].values
+        imgPy[:, :, 2] = ds['alpha_s2'].values
+        imgPy[:, :, 3] = ds['alpha_s3'].values
+        imgPy[:, :, 4] = ds['phi_s'].values
+        imgPy[:, :, 5] = ds['tau_m'].values
+        imgPy[:, :, 6] = ds['psi'].values
+
+        array_file_Py = ['alpha_s', 'alpha_s1', 'alpha_s2', 'alpha_s3',
+                         'phi_s', 'tau_m', 'psi',]
+        
+#################### PWF ###########################
+    elif name_routine == "Cameron":
+        imgPy[:, :, 0] = ds['cameron'].values
+                
 ###########################################################
 ###########################################################
     # OPENING THE POLSARPRO    
@@ -185,7 +278,7 @@ def Create_Cube(path_Py, path_PSP, name_routine):
 
 
 ################### YAMAGUCHI #################
-    elif name_routine in ("Yamaguchi4_Y4R", "Yamaguchi4_Y4O", "Yamaguchi4_S4O"):
+    elif name_routine in ("Yamaguchi4_Y4R", "Yamaguchi4_Y4O", "Yamaguchi4_S4R"):
         img_temp = Open_PSP_Image(path_PSP / (name_routine + '_Odd.bin'), col, row, dtypePSP)
         imgPSP[:,:,0] = np.transpose(np.nan_to_num(img_temp))
 
@@ -198,11 +291,11 @@ def Create_Cube(path_Py, path_PSP, name_routine):
         img_temp = Open_PSP_Image(path_PSP / (name_routine + '_Hlx.bin'), col, row, dtypePSP)
         imgPSP[:,:,3] = np.transpose(np.nan_to_num(img_temp))
         if name_routine == "Yamaguchi4_Y4R":
-            array_file_PSP = ['Y4R_Odd', 'Y4R_Db1l', 'Y4R_Vol', 'Y4R_Hlx']
+            array_file_PSP = ['Y4R_Odd', 'Y4R_Dbl', 'Y4R_Vol', 'Y4R_Hlx']
         elif name_routine == "Yamaguchi4_Y4O":
-            array_file_PSP = ['Y4O_Odd', 'Y4O_Db1l', 'Y4O_Vol', 'Y4O_Hlx']
+            array_file_PSP = ['Y4O_Odd', 'Y4O_Dbl', 'Y4O_Vol', 'Y4O_Hlx']
         elif name_routine == "Yamaguchi4_S4R":
-            array_file_PSP = ['S4R_Odd', 'S4R_Db1l', 'S4R_Vol', 'S4R_Hlx']
+            array_file_PSP = ['S4R_Odd', 'S4R_Dbl', 'S4R_Vol', 'S4R_Hlx']
 
 ################### PWF #################
     elif name_routine == "PWF":
@@ -221,11 +314,59 @@ def Create_Cube(path_Py, path_PSP, name_routine):
        img_temp = Open_PSP_Image(path_PSP / (name_routine + '_Vol.bin'), col, row, dtypePSP)
        imgPSP[:,:,2] = np.transpose(np.nan_to_num(img_temp))
 
-       array_file_PSP = ['F3_Odd', 'F3_Db1l', 'F3_Vol']        
+       array_file_PSP = ['F3_Odd', 'F3_Dbl', 'F3_Vol']        
+
+
+################### VanZyl #################
+    elif name_routine == "VanZyl":
+       img_temp = Open_PSP_Image(path_PSP / (name_routine + '3_Odd.bin'), col, row, dtypePSP)
+       imgPSP[:,:,0] = np.transpose(np.nan_to_num(img_temp))
+
+       img_temp = Open_PSP_Image(path_PSP / (name_routine + '3_Dbl.bin'), col, row, dtypePSP)
+       imgPSP[:,:,1] = np.transpose(np.nan_to_num(img_temp))
+
+       img_temp = Open_PSP_Image(path_PSP / (name_routine + '3_Vol.bin'), col, row, dtypePSP)
+       imgPSP[:,:,2] = np.transpose(np.nan_to_num(img_temp))
+
+       array_file_PSP = ['VZ_Odd', 'VZ_Dbl', 'VZ_Vol']     
+       
+       
+################### TSVM #################
+    elif name_routine == "TSVM":
+       img_temp = Open_PSP_Image(path_PSP / (name_routine + '_alpha_s.bin'), col, row, dtypePSP)
+       imgPSP[:,:,0] = np.transpose(np.nan_to_num(img_temp))
+
+       img_temp = Open_PSP_Image(path_PSP / (name_routine + '_alpha_s1.bin'), col, row, dtypePSP)
+       imgPSP[:,:,1] = np.transpose(np.nan_to_num(img_temp))
+
+       img_temp = Open_PSP_Image(path_PSP / (name_routine + '_alpha_s2.bin'), col, row, dtypePSP)
+       imgPSP[:,:,2] = np.transpose(np.nan_to_num(img_temp))
+
+       img_temp = Open_PSP_Image(path_PSP / (name_routine + '_alpha_s3.bin'), col, row, dtypePSP)
+       imgPSP[:,:,3] = np.transpose(np.nan_to_num(img_temp))
+
+       img_temp = Open_PSP_Image(path_PSP / (name_routine + '_phi_s.bin'), col, row, dtypePSP)
+       imgPSP[:,:,4] = np.transpose(np.nan_to_num(img_temp))
+
+       img_temp = Open_PSP_Image(path_PSP / (name_routine + '_tau_m.bin'), col, row, dtypePSP)
+       imgPSP[:,:,5] = np.transpose(np.nan_to_num(img_temp))
+
+       img_temp = Open_PSP_Image(path_PSP / (name_routine + '_psi.bin'), col, row, dtypePSP)
+       imgPSP[:,:,6] = np.transpose(np.nan_to_num(img_temp))
+
+       array_file_PSP = ['TSVM_alpha_s', 'TSVM_alpha_s1', 'TSVM_alpha_s2', 'TSVM_alpha_s3',
+                         'TSVM_phi_s', 'TSVM_tau_m', 'TSVM_psi']        
+
+################### PWF #################
+    elif name_routine == "Cameron":
+        img_temp = Open_PSP_Image(path_PSP / ('Cameron.bin'), col, row, dtypePSP)
+        imgPSP[:,:,0] = np.transpose(np.nan_to_num(img_temp))
+
         
     return imgPy, imgPSP, array_file_Py, array_file_PSP 
 
 
+       
 
 #%%
 def Open_PSP_Image(filename, col, row, dtype):
@@ -350,67 +491,6 @@ def vis4(img1, img2, img3, img4,
 
     return(fig)
 
-#%% FILENAMES
-
-# IN CASE YOU NEED TO HARDCODE
-#################
-# col = 1248
-# row = 18432
-# dtypePSP = '<f4' # this tells that the type is float
-#################
-
-
-# directoris of images
-# psp are envi files
-path_PSP_short = Path("/home/am221/C/Data/PolSARPy/Output_PSP")
-# py are zarray files
-path_Py_short =  Path("/home/am221/C/Data/PolSARPy/Output_Py")
-
-# general directory for saving imaghes
-path_save_short = Path("/home/am221/C/Data/PolSARPy/Save")
-
-
-
-# defining window sizes for visualisation
-root = tk.Tk()
-screen_width = root.winfo_screenwidth()
-screen_height = root.winfo_screenheight()
-dpi = 100  # dots per inch; you can adjust
-    
-# set global font sizes
-plt.rcParams.update({
-    "font.size": 22,
-    "axes.titlesize": 24,
-    "axes.labelsize": 20,
-    "xtick.labelsize": 18,
-    "ytick.labelsize": 18,
-    "legend.fontsize": 18
-})
-
-
-
-
-#%% SELECT THE PROCEDURE TO TEST
-
-# # automatically finding out the algorithms to test
-# dir_list = os.listdir(path_PSP_short)
-
-# # ### TEST
-dir_list = [ 
-            'h_a_alpha_decomposition',
-            'Yamaguchi4_Y4R',
-            'Yamaguchi4_Y4O',
-            'Yamaguchi4_S4R',
-            'Freeman',
-            'LeeRefined',
-            'PWF'
-            ]
-
-dir_list = [ 
-            'Freeman',
-            ]
-
-array_pro = dir_list
 
 
 
@@ -442,12 +522,24 @@ for i in range(num_pro):
 
     path_Py = path_Py_short/array_pro[i]
     path_PSP = path_PSP_short/array_pro[i]
-    [imgPy, 
-     imgPSP, 
+    [imgPy_full, 
+     imgPSP_full, 
      array_file_Py, 
      array_file_PSP ] = Create_Cube(path_Py, 
                                     path_PSP, 
                                     array_pro[i])
+    
+    ###############################################
+    ######   FOR SMALLER PORTIONS #################
+    flag_area = "small"
+    flag_area = "full"
+    
+    if flag_area == "small":
+        imgPy = imgPy_full[100:1100, 100:11000, :]                                    
+        imgPSP = imgPSP_full[100:1100, 100:11000, :]    
+    else:
+        imgPy = imgPy_full          
+        imgPSP = imgPSP_full
     
     num_file = len(array_file_Py)
 
@@ -460,6 +552,11 @@ for i in range(num_pro):
              str(array_pro[i]) + ' RGB: Python', fact = 1.5, 
              path_out = path_save / 'RGB_Py')
 
+    plt.figure()
+    plt.imshow(np.abs(imgPSP[:,:,0]), vmin = 0, vmax= 5*np.nanmean(np.abs(imgPSP[:,:,0])))
+
+    plt.figure()
+    plt.imshow(np.abs(imgPy[:,:,0]), vmin = 0, vmax= 5*np.nanmean(np.abs(imgPy[:,:,0])))
 
 
 #%% in the following one can select the images to visualise individually, 
@@ -482,7 +579,7 @@ for i in range(num_pro):
         scale = (0, np.abs(imgPSP[:,:,iii]).mean()*2)
         plt.title('PolSARPro ' + str(array_pro[i]) + ': ' + array_file_PSP[iii]) 
         scale2 = (0, np.abs(imgPSP[:,:,0]).mean()*2)
-        im = plt.imshow(np.abs(imgPy[:,:,iii]), cmap = colormap[iii], vmin=scale[0], vmax=scale[1])
+        im = plt.imshow(np.abs(imgPSP[:,:,iii]), cmap = colormap[iii], vmin=scale[0], vmax=scale[1])
         plt.colorbar(im, fraction=0.046, pad=0.04)
         plt.savefig(path_save / ('PSP_' + array_file_PSP[iii]), bbox_inches='tight', pad_inches=0)
         
@@ -494,19 +591,23 @@ for i in range(num_pro):
     Diff = imgPSP - imgPy
 
     # plotting differences
-    plot_RGB(Diff[:,:,1], Diff[:,:,2], Diff[:,:,0], 'RGB: Difference images')
-
-    # vis4(np.transpose(Diff[:,:,0]), np.transpose(Diff[:,:,1]), 
-    #      np.transpose(Diff[:,:,2]), np.transpose(imgPSP[:,:,2]), 
-    #      title1 = str(array_file[0]) + ' difference', 
-    #      title2 = str(array_file[0]) + ' difference',
-    #      title3 = str(array_file[0]) + ' difference', 
-    #      title4 = str(array_file[2]) + '  PolSARpro', 
-    #      scale1 = [0, np.abs(Diff[:,:,0]).mean()*2], 
-    #      scale2 = [0, np.abs(Diff[:,:,1]).mean()*2], 
-    #      scale3 = [0, np.abs(Diff[:,:,2]).mean()*2], 
-    #      scale4 = [0, np.abs(imgPSP[:,:,2]).mean()*2],
-    #      path_out = path_save + 'Difference_plot') 
+    plot_RGB(Diff[:,:,1].real, Diff[:,:,2].real, Diff[:,:,0].real, 'RGB: Difference images')
+    
+    # sar.vis4(Diff[:,:,0].real, Diff[:,:,1].real, Diff[:,:,2].real, Diff[:,:,3].real, 
+    #          title1 = 'Difference Comp1', 
+    #          title2 = 'Difference Comp2',
+    #          title3 = 'Difference Comp3',
+    #          title4 = 'Difference Comp4', 
+    #          scale1 = [0, np.mean(abs(Diff[:,:,0]))], 
+    #          scale2 = [0, np.mean(abs(Diff[:,:,1]))],
+    #          scale3 = [0, np.mean(abs(Diff[:,:,2]))], 
+    #          scale4 = [0, np.mean(abs(Diff[:,:,3]))],  
+    #          flag = 1, 
+    #          outall = path_save / ('Diff_' + array_file_PSP[iii]),
+    #          colormap1 = 'jet',
+    #          colormap2 = 'jet',
+    #          colormap3 = 'jet',
+    #          colormap4 = 'gray')
 
 
 
@@ -525,54 +626,58 @@ for i in range(num_pro):
     for ii in range(num_file):
 
         # histogram of images
-        Py1D = np.ravel(imgPy[:,:,ii])
+        Py1D = np.ravel(np.abs(imgPy[:,:,ii]))
+        p9999 = np.percentile(Py1D, 99.99)
+        Py1D = Py1D[Py1D <= p9999]
         hist = np.histogram(Py1D, bins=100)
         val = hist[1]
         fig = plt.figure(figsize=(screen_width / dpi, screen_height / dpi), dpi=dpi)    
         plt.title('Histogram of ' + str(array_file_PSP[ii]) + ' Python')
         plt.plot(val[:-1], hist[0])
-        plt.axis([np.min(hist[1]), np.max(hist[1]), 0, np.max(hist[0])])
+        plt.axis([np.min(hist[1]), p9999, 0, min_freq])
         plt.savefig(path_save / ('Histogram_' + str(array_file_PSP[ii]) + '_Python'))
     
-        PSP1D = np.ravel(imgPSP[:,:,ii])
+        PSP1D = np.ravel(np.abs(imgPSP[:,:,ii]))
+        p9999 = np.percentile(PSP1D, 99.99)
+        PSP1D = PSP1D[PSP1D <= p9999]
         hist = np.histogram(PSP1D, bins=100)
         val = hist[1]
         fig = plt.figure(figsize=(screen_width / dpi, screen_height / dpi), dpi=dpi)    
         plt.title('Histogram of ' + str(array_file_PSP[ii]) + ' POLSARpro')
         plt.plot(val[:-1], hist[0])
-        plt.axis([np.min(hist[1]), np.max(hist[1]), 0, np.max(hist[0])])
+        plt.axis([np.min(hist[1]), np.max(hist[1]), 0, min_freq])
         plt.savefig(path_save / ('Histogram_' + str(array_file_PSP[ii]) + '_POLSARpro'))
         
-        # # histogram of differences
-        # Diff1D = np.ravel(Diff[:,:,ii])
-        # Diff1D = np.clip(Diff1D, np.nanmin(Diff1D), np.nanmax(Diff1D))
-        # Diff1D = Diff1D[np.isfinite(Diff1D)]
+        # histogram of differences
+        Diff1D = np.ravel(Diff[:,:,ii])
+        Diff1D = np.clip(Diff1D, np.nanmin(Diff1D), np.nanmax(Diff1D))
+        Diff1D = Diff1D[np.isfinite(Diff1D)]
+        hist = np.histogram(Diff1D, bins=100)
         # hist = np.histogram(Diff1D, bins=100)
-        # # hist = np.histogram(Diff1D, bins=100)
-        # val = hist[1]
-        # fig = plt.figure(figsize=(screen_width / dpi, screen_height / dpi), dpi=dpi)    
-        # plt.title('Histogram of DIFFERENCE ' + str(array_file_PSP[ii]) + ' Python')
-        # plt.plot(val[:-1], hist[0])
-        # plt.axis([np.min(hist[1]), np.max(hist[1]), 0, min_freq])
-        # plt.savefig(path_save / ('Histogram_DIFFERENCE_' + str(array_file_PSP[ii]) + '_Python'))      
+        val = hist[1]
+        fig = plt.figure(figsize=(screen_width / dpi, screen_height / dpi), dpi=dpi)    
+        plt.title('Histogram of DIFFERENCE ' + str(array_file_PSP[ii]) + ' Python')
+        plt.plot(val[:-1], hist[0])
+        plt.axis([np.min(hist[1]), np.max(hist[1]), 0, min_freq])
+        plt.savefig(path_save / ('Histogram_DIFFERENCE_' + str(array_file_PSP[ii]) + '_Python'))      
 
         plt.close(fig)
 
 #%% Mean difference
     ##################################################################
 
-        imgPSP_mean[ii] = np.mean(np.abs(imgPSP[:,:, ii]))
-        imgPy_mean[ii]  = np.mean(np.abs(imgPy[:,:, ii]))
+        imgPSP_mean[ii] = np.nanmean(np.abs(imgPSP[:,:, ii]))
+        imgPy_mean[ii]  = np.nanmean(np.abs(imgPy[:,:, ii]))
     
-        Diff_mean[ii] = np.mean(np.abs(Diff[:,:,ii]))
+        Diff_mean[ii] = np.nanmean(np.abs(Diff[:,:,ii]))
     
-        RMSE_mean[ii] = np.sqrt(np.mean( (imgPSP[:,:,ii] - imgPy[:,:,ii])**2 ) )
+        RMSE_mean[ii] = np.sqrt(np.nanmean( (imgPSP[:,:,ii] - imgPy[:,:,ii])**2 ) )
     
-        Norm_RMSE_mean[ii] = np.sqrt(np.mean( (imgPSP[:,:,ii] - imgPy[:,:,ii])**2 / (imgPSP[:,:,ii] + imgPy[:,:,ii])**2 ) )
+        Norm_RMSE_mean[ii] = np.sqrt(np.nanmean( (imgPSP[:,:,ii] - imgPy[:,:,ii])**2 / (imgPSP[:,:,ii] + imgPy[:,:,ii])**2 ) )
     
-        Norm_diff_mean[ii] = np.mean( (imgPSP[:,:,ii] - imgPy[:,:,ii]) / (imgPSP[:,:,ii] + imgPy[:,:,ii]) ) 
+        Norm_diff_mean[ii] = np.nanmean( (imgPSP[:,:,ii] - imgPy[:,:,ii]) / (imgPSP[:,:,ii] + imgPy[:,:,ii]) ) 
     
-        Norm_abs_diff_mean[ii] = np.mean( np.abs(imgPSP[:,:,ii] - imgPy[:,:,ii]) / (imgPSP[:,:,ii] + imgPy[:,:,ii]) )
+        Norm_abs_diff_mean[ii] = np.nanmean( np.abs(imgPSP[:,:,ii] - imgPy[:,:,ii]) / (imgPSP[:,:,ii] + imgPy[:,:,ii]) )
 
 
     # # Normalising the error
@@ -703,7 +808,50 @@ for i in range(num_pro):
         df_perc_norm.to_excel(writer, sheet_name='Normalised Percentile')
     
     
+# ---------------------------------------------------------
+# SAVE EACH SHEET AS ITS OWN CSV
+# ---------------------------------------------------------
+        
+    def transpose_preserve_columns(df, sigfig=4):
+        """
+        Transpose a dataframe, preserve original column names as first column,
+        replace underscores with dots in the first column, 
+        and round numeric values to a given number of significant figures.
+        """
+        # Transpose
+        df_transposed = df.T.copy()
+        
+        # Insert original column names as first column
+        df_transposed.insert(0, "Component", df.columns)
+        
+        # Replace underscores with dots in the first column
+        df_transposed["Component"] = df_transposed["Component"].str.replace("_", ".", regex=False)
+        
+        # Rename second column header to "Values"
+        df_transposed.columns.values[1] = "Values"
+        
+        # Format numeric values to N significant figures
+        def format_sig(x):
+            try:
+                return float(f"{x:.{sigfig}g}")  # 4 significant figures
+            except (ValueError, TypeError):
+                return x  # leave non-numeric as-is
+        
+        # Apply formatting to numeric columns only
+        df_transposed.iloc[:, 1:] = df_transposed.iloc[:, 1:].applymap(format_sig)
+        
+        return df_transposed
     
+    # Example usage
+    dfs = {
+        "Mean": df_mean,
+        "Divergences": df_diverg,
+        "Percentile": df_perc,
+        "NormalisedPercentile": df_perc_norm
+    }
     
+    base_name = f"{array_pro[i]}_stats"
     
-    
+    for name, df in dfs.items():
+        df_transposed = transpose_preserve_columns(df, sigfig=4)
+        df_transposed.to_csv(path_save / f"{base_name}_{name}.csv", index=False)
